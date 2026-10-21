@@ -36,6 +36,6 @@ jsonc
 
 📌 版本声明 / Version
 
-当前版本 v0.1.0（首个正式版），适用于 DeepSeek Harness（desktop profile），无第三方运行时依赖；本项目采用 MIT 协议，属同人粉丝作品、仅供个人学习与使用，禁止商业用途，其中《明日方舟》相关角色、语音与图像素材版权归鹰角网络所有，后续版本更新将在此记录。
+当前版本 v0.1.0（首个测试版），适用于 DeepSeek Harness（desktop profile），无第三方运行时依赖；本项目采用 MIT 协议，属同人粉丝作品、仅供个人学习与使用，禁止商业用途，其中《明日方舟》相关角色、语音与图像素材版权归鹰角网络所有，后续版本更新将在此记录。
 
 Currently at v0.1.0 (first official release), targeting DeepSeek Harness desktop profiles with no third-party runtime dependencies. Licensed under MIT, this is a fan-made project for personal use only — commercial use is prohibited — and all Arknights-related characters, voices and assets belong to Hypergryph. Future updates will be noted here.
