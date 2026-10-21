@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PRTS main UI — mock</title>
+    <style>
+      /* Realistic stand-in for the DSH shell, token-driven by --dsw-* so the
+         real skin overrides (data-prts-skin) colour it exactly like the app. */
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+      }
+      .app {
+        display: flex;
+        height: 100vh;
+        background: var(--dsw-alias-bg-base, #f2f1ee);
+        color: var(--dsw-alias-label-primary, #12120f);
+      }
+      .sidebar {
+        width: 262px;
+        flex: 0 0 auto;
+        background: var(--dsw-specific-sidebar-fill, rgba(246, 244, 239, 0.62));
+        display: flex;
+        flex-direction: column;
+        padding: 14px 12px;
+        gap: 2px;
+        box-sizing: border-box;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px 18px;
+      }
+      .brand .mark {
+        width: 26px;
+        height: 26px;
+        background: var(--dsw-alias-brand-primary, #3f45c9);
+        border-radius: 7px;
+      }
+      .brand .name {
+        font-weight: 700;
+        font-size: 14px;
+      }
+      .treeitem {
+        padding: 9px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        color: var(--dsw-alias-label-secondary, #4c4b45);
+      }
+      .treeitem[aria-selected='true'] {
+        background: var(--dsw-alias-interactive-bg-active, rgba(17, 17, 16, 0.09));
+        color: var(--dsw-alias-label-primary, #12120f);
+      }
+      .content {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .phasebar {
+        padding: 16px 24px 8px;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        color: var(--dsw-alias-label-tertiary, #6f6d66);
+      }
+      .scroll {
+        flex: 1;
+        overflow: auto;
+        padding: 8px 24px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .msg {
+        max-width: 780px;
+      }
+      .assistant {
+        display: flex;
+        gap: 12px;
+      }
+      .bubble {
+        background: var(--dsw-specific-bubble, #faf8f3);
+        border-radius: 4px 14px 14px 14px;
+        padding: 14px 18px;
+        font-size: 14px;
+        line-height: 1.7;
+        box-shadow: 0 1px 2px rgba(17, 17, 16, 0.05);
+      }
+      .tool {
+        margin-top: 10px;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 12px;
+        color: var(--dsw-alias-label-secondary, #4c4b45);
+        background: var(--dsw-specific-bubble, #faf8f3);
+      }
+      .tool .state {
+        color: var(--dsw-alias-brand-primary, #3f45c9);
+      }
+      .composer {
+        padding: 10px 24px 20px;
+      }
+      .composer-card {
+        border-radius: 16px;
+        padding: 15px 18px;
+        min-height: 62px;
+        box-sizing: border-box;
+        background: var(--dsw-specific-input-major, #fbfaf6);
+        font-size: 14px;
+        color: var(--dsw-alias-label-caption, #8a8880);
+      }
+      .kbd {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        border: 1px solid var(--dsw-alias-border-l2, #c9c7c0);
+        border-radius: 5px;
+        padding: 1px 6px;
+        color: var(--dsw-alias-label-tertiary, #6f6d66);
+      }
+
+      /* ---- PRTS composite background (mock-local design, ?bg=fine|geo) ---- */
+      html[data-prts-ui='A'] .prts-ui-bg {
+        --fx-ink: rgba(17, 17, 16, 0.16);
+        --fx-line: rgba(17, 17, 16, 0.14);
+        --fx-line2: rgba(17, 17, 16, 0.09);
+        --fx-c1: rgba(63, 69, 201, 0.2);
+        --fx-c2: rgba(42, 107, 100, 0.22);
+        --fx-c3: rgba(176, 122, 47, 0.2);
+      }
+      html[data-prts-ui='B'] .prts-ui-bg {
+        --fx-ink: rgba(236, 233, 225, 0.14);
+        --fx-line: rgba(236, 233, 225, 0.15);
+        --fx-line2: rgba(236, 233, 225, 0.09);
+        --fx-c1: rgba(198, 91, 213, 0.3);
+        --fx-c2: rgba(95, 195, 201, 0.26);
+        --fx-c3: rgba(224, 169, 79, 0.26);
+      }
+      @keyframes fxSpin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes fxSpinR {
+        to {
+          transform: rotate(-360deg);
+        }
+      }
+      @keyframes fxSpin45 {
+        from {
+          transform: rotate(45deg);
+        }
+        to {
+          transform: rotate(405deg);
+        }
+      }
+      @keyframes fxSpinR45 {
+        from {
+          transform: rotate(45deg);
+        }
+        to {
+          transform: rotate(-315deg);
+        }
+      }
+      @keyframes fxPulse {
+        0%,
+        100% {
+          transform: rotate(45deg) scale(1);
+        }
+        50% {
+          transform: rotate(45deg) scale(1.45);
+        }
+      }
+      .prts-ui-comp {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      /* ----- fine: composite core + rings + debris ----- */
+      .fx-anchor {
+        position: absolute;
+        left: 62%;
+        top: 50%;
+        width: 0;
+        height: 0;
+      }
+      .fx-core {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: min(46vh, 420px);
+        height: min(46vh, 420px);
+        margin: calc(min(46vh, 420px) / -2) 0 0 calc(min(46vh, 420px) / -2);
+        border: 1px solid var(--fx-line);
+        transform: rotate(45deg);
+        animation: fxSpin45 96s linear infinite;
+      }
+      .fx-core2 {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: min(22vh, 200px);
+        height: min(22vh, 200px);
+        margin: calc(min(22vh, 200px) / -2) 0 0 calc(min(22vh, 200px) / -2);
+        background: var(--fx-ink);
+        transform: rotate(45deg);
+        animation: fxSpinR45 72s linear infinite;
+      }
+      .fx-ring {
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 50%;
+        border: 1px dashed var(--fx-line2);
+      }
+      .fx-ring.r1 {
+        width: min(58vh, 540px);
+        height: min(58vh, 540px);
+        margin: calc(min(58vh, 540px) / -2) 0 0 calc(min(58vh, 540px) / -2);
+        animation: fxSpin 120s linear infinite;
+      }
+      .fx-ring.r2 {
+        width: min(72vh, 660px);
+        height: min(72vh, 660px);
+        margin: calc(min(72vh, 660px) / -2) 0 0 calc(min(72vh, 660px) / -2);
+        border-style: solid;
+        border-color: var(--fx-c1);
+        animation: fxSpinR 160s linear infinite;
+      }
+      .fx-ring.r3 {
+        width: min(86vh, 780px);
+        height: min(86vh, 780px);
+        margin: calc(min(86vh, 780px) / -2) 0 0 calc(min(86vh, 780px) / -2);
+        border-color: var(--fx-c2);
+        border-style: solid;
+        border-left-color: transparent;
+        border-right-color: transparent;
+        animation: fxSpin 200s linear infinite;
+      }
+      .fx-orbit {
+        position: absolute;
+        left: 0;
+        top: 0;
+        animation: fxSpin linear infinite;
+      }
+      .fx-orbit.o1 {
+        width: min(62vh, 580px);
+        height: min(62vh, 580px);
+        margin: calc(min(62vh, 580px) / -2) 0 0 calc(min(62vh, 580px) / -2);
+        animation-duration: 44s;
+      }
+      .fx-orbit.o2 {
+        width: min(78vh, 720px);
+        height: min(78vh, 720px);
+        margin: calc(min(78vh, 720px) / -2) 0 0 calc(min(78vh, 720px) / -2);
+        animation-duration: 67s;
+        animation-direction: reverse;
+      }
+      .fx-frag {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 15px;
+        height: 15px;
+        margin-left: -7.5px;
+        border: 1px solid var(--fx-c2);
+        transform: rotate(45deg);
+        animation: fxPulse 7s ease-in-out infinite;
+      }
+      .fx-frag.f2 {
+        border-color: var(--fx-c3);
+        animation-delay: -2.4s;
+      }
+      .fx-frag.f3 {
+        border-color: var(--fx-c1);
+        animation-delay: -4.8s;
+      }
+      .fx-orbit.o1 .fx-frag.f1 {
+        left: 50%;
+        top: 0;
+      }
+      .fx-orbit.o1 .fx-frag.f2 {
+        left: 100%;
+        top: 50%;
+        margin-top: -7.5px;
+      }
+      .fx-orbit.o1 .fx-frag.f3 {
+        left: 50%;
+        top: 100%;
+        margin-top: -7.5px;
+      }
+      .fx-orbit.o2 .fx-frag.f4 {
+        left: 50%;
+        top: 0;
+      }
+      .fx-orbit.o2 .fx-frag.f5 {
+        left: 0;
+        top: 50%;
+        margin-left: -7.5px;
+        margin-top: -7.5px;
+      }
+      .fx-orbit.o2 .fx-frag.f6 {
+        left: 50%;
+        top: 100%;
+        margin-top: -7.5px;
+      }
+      .fx-dot {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: var(--fx-c1);
+        animation: fxPulse 9s ease-in-out infinite;
+      }
+      /* ----- geo: bold abstract shapes ----- */
+      .gx-diamond {
+        position: absolute;
+        right: 4%;
+        top: 50%;
+        width: min(58vh, 560px);
+        height: min(58vh, 560px);
+        margin-top: calc(min(58vh, 560px) / -2);
+        border: 2px solid var(--fx-line);
+        transform: rotate(45deg);
+        animation: fxSpin45 160s linear infinite;
+      }
+      .gx-tri {
+        position: absolute;
+        right: -6%;
+        bottom: -8%;
+        width: min(48vh, 460px);
+        height: min(48vh, 460px);
+        background: linear-gradient(135deg, var(--fx-c1), transparent 72%);
+        clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        animation: fxPulse 16s ease-in-out infinite;
+      }
+      .gx-arc {
+        position: absolute;
+        border-radius: 50%;
+        border-style: solid;
+      }
+      .gx-arc.a1 {
+        left: -9%;
+        top: -11%;
+        width: min(36vh, 340px);
+        height: min(36vh, 340px);
+        border-width: 8px;
+        border-color: transparent var(--fx-c2) transparent transparent;
+        transform: rotate(24deg);
+      }
+      .gx-arc.a2 {
+        bottom: -14%;
+        left: 3%;
+        width: min(48vh, 460px);
+        height: min(48vh, 460px);
+        border-width: 8px;
+        border-color: transparent transparent var(--fx-c1) transparent;
+        transform: rotate(-14deg);
+      }
+      .gx-band {
+        position: absolute;
+        left: -2%;
+        top: 20%;
+        width: 40%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--fx-c3), transparent);
+      }
+      .gx-band.b2 {
+        top: 78%;
+        left: auto;
+        right: -2%;
+        background: linear-gradient(270deg, transparent, var(--fx-c3), transparent);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .prts-ui-comp * {
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <span data-shell-overlay></span>
+      <div class="sidebar">
+        <div class="brand">
+          <div class="mark" data-slot="sidebar.brand.mark"></div>
+          <div class="name" data-slot="sidebar.brand.name">PRTS Agent</div>
+        </div>
+        <div class="treeitem">◇ 新会话</div>
+        <div class="treeitem" aria-selected="true">设计 PRTS 启动插件</div>
+        <div class="treeitem">主界面美化讨论</div>
+        <div class="treeitem">语音与音效</div>
+      </div>
+      <div class="content">
+        <div class="phasebar" data-phase="active">ACTIVE SESSION — 设计 PRTS 启动插件</div>
+        <div class="scroll" data-conversation-scroll>
+          <div class="msg" data-chat-flow-kind="assistant-step">
+            <div class="assistant">
+              <div class="bubble">已收到。启动门、登录门与语音链路均已实装。现在可以为 DSH 主界面套用 PRTS 主题：纸感背景、坐标网格、菱形标记与毛玻璃侧栏——全部为可读性优先的装饰层，并保留扩展插口供后续功能使用。</div>
+            </div>
+            <div class="tool" data-tool data-state="running"><span class="state">● 执行中</span> — 正在加载会话上下文…</div>
+          </div>
+        </div>
+        <div class="composer" data-composer-seat>
+          <div class="composer-card" data-composer-card>发消息或创建任务 · 调用命令，@ 文件或对话 <span class="kbd">Enter</span> 发送</div>
+        </div>
+      </div>
+    </div>
+    <script src="./vendor/react.production.min.js"></script>
+    <script src="./vendor/react-dom.production.min.js"></script>
+    <script>
+      // Same fake loader contract as index.html; the module's apply() runs
+      // ensureStyle() so the REAL skin CSS (including the main-ui section) is
+      // injected, and the no-op slots context keeps it from mounting the gate.
+      window.__ModuleLoader__ = {
+        load: function (spec) {
+          var localRequire = function (name) {
+            if (name === 'react') return window.React
+            if (name === 'react-dom') return window.ReactDOM
+            throw new Error('unexpected require: ' + name)
+          }
+          window.__PRTS_MODULE__ = spec.factory(localRequire)
+        },
+      }
+      window.__PRTS_BOOT_PREVIEW__ = null
+    </script>
+    <script src="../lib/client.js"></script>
+    <script>
+      var params = new URLSearchParams(location.search)
+      var variant = (params.get('variant') || 'A').toUpperCase()
+      var uiOn = params.get('ui') !== '0'
+      window.__PRTS_MODULE__.apply({
+        slots: {
+          inject: function () {},
+          register: function () {
+            return function () {}
+          },
+        },
+      })
+      var root = document.documentElement
+      root.dataset.prtsSkin = variant
+      root.dataset.prtsVariant = variant
+      root.dataset.prtsHero = '0'
+      if (uiOn) {
+        root.dataset.prtsUi = variant
+        root.dataset.prtsUiBg = params.get('uiBg') !== '0' ? '1' : '0'
+        root.dataset.prtsUiChat = params.get('uiChat') !== '0' ? '1' : '0'
+        root.dataset.prtsUiPanels = params.get('uiPanels') !== '0' ? '1' : '0'
+        if (params.get('uiBg') !== '0') {
+          var bg = document.createElement('div')
+          bg.className = 'prts-ui-bg'
+          bg.setAttribute('aria-hidden', 'true')
+          var design = params.get('bg') || 'fine'
+          var inner = '<i class="prts-ui-grid"></i>'
+          if (design === 'geo') {
+            inner +=
+              '<div class="prts-ui-comp">' +
+              '<i class="gx-diamond"></i><i class="gx-tri"></i>' +
+              '<i class="gx-arc a1"></i><i class="gx-arc a2"></i>' +
+              '<i class="gx-band"></i><i class="gx-band b2"></i>' +
+              '</div>'
+          } else {
+            var fragsA = '<i class="fx-frag f1"></i><i class="fx-frag f2"></i><i class="fx-frag f3"></i>'
+            var fragsB = '<i class="fx-frag f4"></i><i class="fx-frag f5"></i><i class="fx-frag f6"></i>'
+            var dots = ''
+            for (var d = 1; d <= 9; d++) dots += '<i class="fx-dot d' + d + '"></i>'
+            inner +=
+              '<div class="prts-ui-comp">' +
+              '<i class="fx-anchor"><i class="fx-core"></i><i class="fx-core2"></i>' +
+              '<i class="fx-ring r1"></i><i class="fx-ring r2"></i><i class="fx-ring r3"></i>' +
+              '<i class="fx-orbit o1">' + fragsA + '</i>' +
+              '<i class="fx-orbit o2">' + fragsB + '</i></i>' +
+              dots +
+              '</div>'
+          }
+          inner +=
+            '<i class="prts-ui-mark">PRTS</i>' +
+            '<i class="prts-ui-corner a"></i>' +
+            '<i class="prts-ui-corner b"></i>' +
+            '<i class="prts-ui-vig"></i>'
+          bg.innerHTML = inner
+          // dot positions (deterministic, hand-picked)
+          var dotPos = [
+            ['14%', '26%'], ['22%', '74%'], ['34%', '38%'], ['30%', '84%'], ['46%', '20%'],
+            ['52%', '88%'], ['64%', '12%'], ['74%', '30%'], ['84%', '66%'],
+          ]
+          for (var di = 0; di < dotPos.length; di++) {
+            var dn = bg.querySelector('.fx-dot.d' + (di + 1))
+            if (dn) {
+              dn.style.left = dotPos[di][0]
+              dn.style.top = dotPos[di][1]
+            }
+          }
+          document.body.appendChild(bg)
+        }
+      }
+    </script>
+  </body>
+</html>

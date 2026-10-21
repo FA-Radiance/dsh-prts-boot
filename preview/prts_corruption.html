@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>PRTS corruption preview (animated)</title>
+<style>
+  :root {
+    --bg: #efede7;
+    --panel: #f7f5f0;
+    --ink: #111110;
+    --dim: #6d6a63;
+    --faint: #b8b5ad;
+    --line: #d9d5cc;
+    --acc: #35a2a0;
+    --acc2: #5b6bd6;
+    --danger: #c64f3f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1712px; height: 972px; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    position: relative;
+  }
+
+  /* ---- paper grid + watermark ---- */
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: .35;
+  }
+  .coarse {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(17,17,16,.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(17,17,16,.14) 1px, transparent 1px);
+    background-size: 240px 240px;
+  }
+  .watermark {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 210px; color: rgba(17,17,16,.05);
+    font-family: Georgia, serif;
+  }
+
+  /* ---- one 7-second loop; bursts at ~0.1s / ~2.45s / ~4.85s ---- */
+  @keyframes burstFlash {
+    0%, 100% { opacity: 0; }
+    1.5%, 4.5% { opacity: 1; }
+    36%, 39% { opacity: 1; }
+    70%, 73% { opacity: 1; }
+  }
+  @keyframes silhouetteStrobe {
+    0%, 1.4%, 6.6%, 35.9%, 41.1%, 69.9%, 75.1%, 100% { opacity: 0; }
+    1.5%, 6.5% { opacity: .94; }
+    36%, 41% { opacity: .94; }
+    70%, 75% { opacity: .94; }
+  }
+  @keyframes silhouetteGlitch {
+    0%, 1.4%, 6.6%, 35.9%, 41.1%, 69.9%, 75.1%, 100% { transform: translateX(0); }
+    2%, 5% { transform: translateX(5px); }
+    36.5%, 40% { transform: translateX(-5px); }
+    70.5%, 74% { transform: translateX(3px); }
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.025); }
+  }
+  @keyframes sliceShiftA {
+    0%, 100% { transform: translateX(0); }
+    1.5%, 4.5% { transform: translateX(-9px); }
+    36%, 39% { transform: translateX(-13px); }
+    70%, 73% { transform: translateX(-7px); }
+  }
+  @keyframes sliceShiftB {
+    0%, 100% { transform: translateX(0); }
+    1.5%, 4.5% { transform: translateX(10px); }
+    36%, 39% { transform: translateX(14px); }
+    70%, 73% { transform: translateX(8px); }
+  }
+  @keyframes plateKick {
+    0%, 100% { transform: translate(-50%, -50%); }
+    1.5%, 4% { transform: translate(-49.2%, -50%); }
+    36%, 38.5% { transform: translate(-50.6%, -49.8%); }
+    70%, 72.5% { transform: translate(-49.5%, -50.3%); }
+  }
+  @keyframes ghostJitter {
+    0%, 100% { transform: translateX(0); text-shadow: none; }
+    2%, 5% { transform: translateX(2px);
+             text-shadow: 1.6px 0 rgba(198,79,63,.6), -1.6px 0 rgba(53,162,160,.6); }
+    36.5%, 39.5% { transform: translateX(-2px);
+                   text-shadow: -1.6px 0 rgba(198,79,63,.6), 1.6px 0 rgba(53,162,160,.6); }
+    70.5%, 73.5% { transform: translateX(1px);
+                   text-shadow: 1.6px 0 rgba(198,79,63,.6), -1.6px 0 rgba(53,162,160,.6); }
+    20%, 55% { transform: translateX(0); text-shadow: none; }
+  }
+  @keyframes stampBlink {
+    0%, 8% { opacity: 0; transform: rotate(-4deg) scale(.9); }
+    9%, 14% { opacity: .95; transform: rotate(-4deg) scale(1); }
+    15%, 44% { opacity: 0; transform: rotate(-4deg) scale(.9); }
+    45%, 50% { opacity: .95; transform: rotate(-4deg) scale(1); }
+    51%, 100% { opacity: 0; transform: rotate(-4deg) scale(.9); }
+  }
+  @keyframes errInOut {
+    0%, 5% { opacity: 0; transform: translateY(6px); }
+    8%, 20% { opacity: .95; transform: translateY(0); }
+    24%, 30% { opacity: 0; transform: translateY(-4px); }
+    100% { opacity: 0; }
+  }
+  @keyframes errInOut2 {
+    0%, 48% { opacity: 0; transform: translateY(6px); }
+    52%, 64% { opacity: .95; transform: translateY(0); }
+    68%, 74% { opacity: 0; transform: translateY(-4px); }
+    100% { opacity: 0; }
+  }
+  @keyframes gridRoll {
+    0%, 100% { background-position: 0 0, 0 0; }
+    2%, 5% { background-position: 0 26px, 0 0; }
+    36.5%, 39% { background-position: 0 -18px, 0 0; }
+    70.5%, 73% { background-position: 0 12px, 0 0; }
+  }
+  @keyframes avatarCorrupt {
+    0%, 100% { opacity: 0; }
+    36.5%, 40% { opacity: 1; }
+    71%, 74% { opacity: 1; }
+  }
+  @keyframes haloPulse {
+    0%, 100% { opacity: .5; transform: scale(1); }
+    50% { opacity: .9; transform: scale(1.04); }
+  }
+
+  /* ---- silhouette apparition ---- */
+  .silhouette {
+    position: absolute; left: 0; top: 0;
+    width: 50%; height: 100%;
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .portal {
+    position: absolute; left: 50%; top: 58%;
+    width: 560px; height: 560px; margin: -280px 0 0 -280px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(17,17,16,.14) 0%,
+      rgba(53,162,160,.12) 34%,
+      rgba(53,162,160,.05) 55%,
+      rgba(53,162,160,0) 72%);
+  }
+  .halo {
+    position: absolute; left: 50%; top: 24%;
+    width: 300px; height: 300px; margin-left: -150px;
+    border-radius: 50%;
+    border: 2px solid rgba(53,162,160,.4);
+    box-shadow: 0 0 90px rgba(53,162,160,.28), inset 0 0 60px rgba(53,162,160,.14);
+    animation: haloPulse 4.2s ease-in-out infinite;
+  }
+  .fig {
+    position: absolute; left: 50%; top: 50%;
+    animation: breathe 5.6s ease-in-out infinite;
+  }
+  .fig.ghosted { animation: breathe 5.6s ease-in-out infinite, silhouetteStrobe 7s linear infinite; }
+  .fig-a { width: 330px; height: 470px; margin: -235px 0 0 -165px; filter: drop-shadow(0 0 30px rgba(53,162,160,.4)); }
+  .fig-a svg { width: 100%; height: 100%; }
+  .fig-b {
+    position: relative; left: auto; top: auto; margin: 0;
+    height: calc(100% - 200px);
+    aspect-ratio: 412 / 394;
+    animation: none;
+  }
+  .fig-b.ghosted {
+    animation: silhouetteStrobe 7s linear infinite, silhouetteGlitch 7s linear infinite;
+  }
+  .fig-b .layer {
+    position: absolute; inset: 0;
+  }
+  .fig-b .layer img {
+    width: 100%; height: 100%; object-fit: contain;
+    filter: drop-shadow(0 0 44px rgba(53,162,160,.5));
+  }
+  .fig-b .layer.corrupted { animation: avatarCorrupt 7s linear infinite; }
+  .fig-b .layer.corrupted img {
+    filter: drop-shadow(2.5px 0 rgba(198,79,63,.6)) drop-shadow(-2.5px 0 rgba(53,162,160,.6))
+            drop-shadow(0 0 52px rgba(198,79,63,.45));
+  }
+
+  /* ---- glitch slice bands ---- */
+  .slice {
+    position: absolute; left: 0; right: 0;
+    height: 26px;
+    z-index: 6;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(198,79,63,.20), rgba(198,79,63,.20)),
+      linear-gradient(rgba(53,162,160,.16), rgba(53,162,160,.16)),
+      linear-gradient(rgba(247,245,240,.9), rgba(247,245,240,.9));
+    background-size: 26px 100%, 26px 100%, 100% 100%;
+    background-position: -9px 0, 10px 0, 0 0;
+    background-repeat: no-repeat;
+    mix-blend-mode: multiply;
+    opacity: 0;
+  }
+  .slice.s1 { top: 18%; animation: burstFlash 7s linear infinite, sliceShiftA 7s linear infinite; }
+  .slice.s2 { top: 47%; height: 18px; animation: burstFlash 7s linear infinite, sliceShiftB 7s linear infinite; }
+  .slice.s3 { top: 71%; height: 30px; animation: burstFlash 7s linear infinite, sliceShiftA 7s linear infinite; }
+
+  /* ---- full-screen brightness flicker ---- */
+  .flicker {
+    position: absolute; inset: 0;
+    z-index: 7; pointer-events: none;
+    background: linear-gradient(rgba(255,255,255,.22), rgba(255,255,255,0) 30%, rgba(255,255,255,.14) 62%, rgba(255,255,255,0) 100%);
+    animation: burstFlash 7s linear infinite;
+  }
+
+  /* ---- error text streams ---- */
+  .errs { position: absolute; z-index: 8; font-family: Consolas, "Courier New", monospace; font-size: 15px; letter-spacing: .5px; pointer-events: none; }
+  .err {
+    padding: 2px 8px; margin-bottom: 6px; width: max-content;
+    background: rgba(17,17,16,.88); color: #a9e3de;
+    border-left: 3px solid var(--danger);
+    text-shadow: 0 0 6px rgba(53,162,160,.8);
+    opacity: 0;
+  }
+  .err.red { border-left-color: var(--acc); color: #ffb3a8; text-shadow: 0 0 6px rgba(198,79,63,.8); }
+  .errs.tl { top: 64px; left: 64px; }
+  .errs.br { bottom: 64px; right: 64px; text-align: right; }
+  .errs.tl .err:nth-child(1) { animation: errInOut 7s linear infinite; }
+  .errs.tl .err:nth-child(2) { animation: errInOut 7s linear infinite .35s; }
+  .errs.tl .err:nth-child(3) { animation: errInOut2 7s linear infinite .2s; }
+  .errs.br .err:nth-child(1) { animation: errInOut2 7s linear infinite; }
+  .errs.br .err:nth-child(2) { animation: errInOut 7s linear infinite .5s; }
+  .gibberish { letter-spacing: 3px; color: rgba(17,17,16,.5); font-size: 17px; opacity: .8; }
+
+  /* ---- identify plate ---- */
+  .plate {
+    position: absolute; left: 61%; top: 50%;
+    width: 700px;
+    background: rgba(247,245,240,.86);
+    backdrop-filter: blur(2px);
+    border: 1px solid var(--line);
+    box-shadow: 0 30px 80px rgba(17,17,16,.18);
+    z-index: 5;
+    padding: 34px 40px 26px;
+    animation: plateKick 7s linear infinite;
+  }
+  .plate::before {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(17,17,16,.035) 0 1px, transparent 1px 4px);
+    pointer-events: none;
+  }
+  .plate-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; }
+  .plate-title h1 { font-size: 21px; letter-spacing: .28em; font-weight: 600; }
+  .plate-title .stamp {
+    font-family: Consolas, monospace; font-size: 13px; color: var(--danger);
+    border: 1px solid var(--danger); padding: 2px 8px; letter-spacing: .12em;
+    opacity: 0;
+    box-shadow: 0 0 18px rgba(198,79,63,.25);
+    animation: stampBlink 7s linear infinite;
+  }
+  .row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 13px 14px; border: 1px solid var(--line); margin-bottom: 10px;
+    background: rgba(255,255,255,.5);
+  }
+  .row .tag { font-family: Consolas, monospace; font-size: 14px; color: var(--dim); width: 62px; }
+  .row .name { flex: 1; }
+  .row .name .en { font-size: 16px; letter-spacing: .18em; font-weight: 600; }
+  .row .name .cn { font-size: 13px; color: var(--dim); letter-spacing: .3em; margin-top: 2px; }
+  .row .no { font-family: Consolas, monospace; font-size: 13px; color: var(--dim); }
+  .row.ghost {
+    border-color: rgba(53,162,160,.55);
+    background: rgba(53,162,160,.06);
+    box-shadow: 0 0 26px rgba(53,162,160,.18);
+    animation: ghostJitter 7s linear infinite;
+  }
+  .row.ghost .tag { color: var(--acc); animation: ghostTag 2.3s steps(2, end) infinite; }
+  @keyframes ghostTag { 50% { opacity: .15; } }
+  .row.ghost .name .cn { letter-spacing: .46em; }
+  .plate-foot { margin-top: 16px; display: flex; justify-content: space-between; font-family: Consolas, monospace; font-size: 12px; color: var(--faint); }
+
+  /* ---- variant caption ---- */
+  .caption {
+    position: absolute; left: 64px; bottom: 48px;
+    z-index: 9;
+    font-family: Consolas, monospace; font-size: 15px; letter-spacing: .2em;
+    color: var(--dim);
+  }
+  .caption b { color: var(--ink); }
+</style>
+</head>
+<body>
+  <div class="grid" style="animation: gridRoll 7s linear infinite"></div>
+  <div class="coarse"></div>
+  <div class="watermark">◇</div>
+
+  <div class="silhouette">
+    <div class="portal"></div>
+    <div class="halo"></div>
+    <div class="fig fig-a ghosted" id="figA">
+      <svg viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="150" cy="38" rx="76" ry="15" fill="#111110" opacity=".75"/>
+        <circle cx="150" cy="128" r="46" fill="#111110"/>
+        <path d="M150 176 C 128 176 96 196 88 246 C 84 276 84 300 86 330 L 214 330 C 216 300 216 276 212 246 C 204 196 172 176 150 176 Z" fill="#111110"/>
+        <path d="M 88 258 C 108 252 128 250 150 250 C 172 250 192 252 212 258 L 212 340 C 190 346 166 348 150 348 C 134 348 110 346 88 340 Z" fill="#111110" opacity=".92"/>
+        <rect x="138" y="168" width="24" height="20" fill="#111110"/>
+        <rect x="132" y="116" width="36" height="10" rx="5" fill="#35a2a0" opacity=".85"/>
+      </svg>
+    </div>
+    <div class="fig fig-b ghosted" id="figB" style="display:none">
+      <div class="layer"><img src="assets/prts_npc083_silhouette.png" alt=""></div>
+      <div class="layer corrupted"><img src="assets/prts_npc083_silhouette.png" alt=""></div>
+    </div>
+  </div>
+
+  <div class="slice s1"></div>
+  <div class="slice s2"></div>
+  <div class="slice s3"></div>
+  <div class="flicker"></div>
+
+  <div class="errs tl">
+    <div class="err">SIGFAULT 0x1F :: ACCESS OVERRIDE</div>
+    <div class="err">prts.core: overwrite(9) → ROOT …</div>
+    <div class="err red">0x7A [E] identity.db: record 083 … corrupt</div>
+    <div class="gibberish">▓▒░ ███▒░░ ▓░▒▓</div>
+  </div>
+  <div class="errs br">
+    <div class="err">kernel: EYESOFPRIESTESS …</div>
+    <div class="err">watchdog: 167 tally / 3711 node</div>
+    <div class="gibberish">░░▒▓█ ░▒▓ ██░▒</div>
+  </div>
+
+  <div class="plate">
+    <div class="plate-title">
+      <h1>PRTS // IDENTITY</h1>
+      <span class="stamp">SYSTEM COMPROMISED</span>
+    </div>
+    <div class="row"><span class="tag">A-01</span><div class="name"><div class="en">DOCTOR</div><div class="cn">博士</div></div><span class="no">NO. B101</span></div>
+    <div class="row"><span class="tag">A-02</span><div class="name"><div class="en">AMIYA</div><div class="cn">阿米娅</div></div><span class="no">NO. R001</span></div>
+    <div class="row"><span class="tag">A-03</span><div class="name"><div class="en">KAL'TSIT</div><div class="cn">凯尔希</div></div><span class="no">NO. B003</span></div>
+    <div class="row ghost"><span class="tag">S-00</span><div class="name"><div class="en">PRIESTESS</div><div class="cn">普瑞赛斯 · 隐藏档案 · 前文明</div></div><span class="no">NO. ∞</span></div>
+    <div class="plate-foot"><span>RHODES ISLAND — PRTS DIVISION</span><span>SECURE CHANNEL · 12 MS</span></div>
+  </div>
+
+  <div class="caption" id="caption">VAR A — <b>ABSTRACT SILHOUETTE</b>（抽象剪影）</div>
+
+  <script>
+    const params = new URLSearchParams(location.search)
+    if (params.get('art') === 'b') {
+      document.getElementById('figA').style.display = 'none'
+      document.getElementById('figB').style.display = ''
+      document.getElementById('caption').innerHTML = 'VAR B — <b>PRIESTESS</b>（普瑞赛斯 · 胸像剪影）'
+    }
+    // ?t=<seconds> seeks all CSS animations to that moment; ?freeze=1 pauses them
+    // (used for deterministic static design shots)
+    const t = parseFloat(params.get('t') || '')
+    if (t > 0) {
+      document.querySelectorAll('*').forEach((el) => {
+        const st = getComputedStyle(el)
+        if (st.animationName && st.animationName !== 'none') {
+          el.style.animationDelay = `-${t}s`
+        }
+      })
+    }
+    if (params.get('freeze') === '1') {
+      document.querySelectorAll('*').forEach((el) => {
+        const st = getComputedStyle(el)
+        if (st.animationName && st.animationName !== 'none') {
+          el.style.animationPlayState = 'paused'
+        }
+      })
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PRTS boot — preview</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #2a2a2a;
+      }
+      #host {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="host"></div>
+    <script src="./vendor/react.production.min.js"></script>
+    <script src="./vendor/react-dom.production.min.js"></script>
+    <script>
+      // Minimal stand-in for the DSH client module loader: the wire format is
+      // `load({ id, factory(require) })`, so the preview materialises the real
+      // factory instead of re-implementing the UI.
+      window.__ModuleLoader__ = {
+        load: function (spec) {
+          var localRequire = function (name) {
+            if (name === 'react') return window.React
+            if (name === 'react-dom') return window.ReactDOM
+            throw new Error('unexpected require: ' + name)
+          }
+          window.__PRTS_MODULE__ = spec.factory(localRequire)
+        },
+      }
+
+      var params = new URLSearchParams(location.search)
+      var phase = params.get('phase') || 'identify'
+      var variant = (params.get('variant') || 'A').toUpperCase()
+      var user = params.get('user') || 'doctor'
+      var at = params.get('at')
+      // Seed a session BEFORE the client module loads (tests remember/restore).
+      if (params.get('seed') === '1') {
+        try {
+          sessionStorage.setItem(
+            'dsh-prts-boot:session',
+            JSON.stringify({ user: params.get('seedUser') || 'doctor', at: Date.now() }),
+          )
+        } catch (e) {}
+      }
+      window.__PRTS_BOOT_PREVIEW__ = {
+        phase: phase,
+        user: user,
+        bootAt: at === null ? undefined : Number(at),
+        grantAt: at === null ? undefined : Number(at),
+        reveal: params.get('reveal') === '1',
+        entry: params.get('entry') ?? '',
+        view: params.get('view') ?? 'input',
+        settings: {
+          variant: variant,
+          voice: false,
+          volume: 0,
+          anomaly: Number(params.get('anomaly') ?? 2),
+          uiSkin: params.get('uiSkin') !== '0',
+          uiBg: params.get('uiBg') !== '0',
+          uiChat: params.get('uiChat') !== '0',
+          uiPanels: params.get('uiPanels') !== '0',
+          uiFloat: params.get('uiFloat') !== '0',
+          sfx: params.get('sfx') !== '0',
+          keys: {
+            doctor: params.get('keyDoctor') ?? '',
+            amiya: params.get('keyAmiya') ?? '',
+            kaltsit: params.get('keyKaltsit') ?? '',
+          },
+          customUsers: (function () {
+            // cu=serial:cn:en:key|serial:cn:en:key|... (URL-encoded)
+            var raw = params.get('cu')
+            if (raw === null) return []
+            return raw
+              .split('|')
+              .map(function (part) {
+                var f = part.split(':')
+                return { serial: (f[0] || '').toUpperCase(), cn: f[1] || '', en: f[2] || '', key: f[3] || '' }
+              })
+              .filter(function (u) {
+                return u.serial.length >= 2 && (u.cn !== '' || u.en !== '')
+              })
+          })(),
+        },
+      }
+
+      var t = params.get('t')
+      if (t !== null) {
+        var freeze = params.get('freeze') === '1'
+        var st = document.createElement('style')
+        st.textContent =
+          '.prts-gate * { animation-delay: calc(var(--prts-t-offset, 0s)) !important; ' +
+          (freeze ? 'animation-play-state: paused !important; ' : '') +
+          '} .prts-gate { --prts-t-offset: ' + '-' + t + 's; }'
+        document.head.appendChild(st)
+      }
+    </script>
+    <script src="../lib/client.js"></script>
+    <script src="./main.js"></script>
+  </body>
+</html>

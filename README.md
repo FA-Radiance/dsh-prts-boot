@@ -1,33 +1,100 @@
 # dsh-prts-boot
 
-🎯 About / 项目简介
-dsh-prts-boot 是一款《明日方舟》PRTS 主题的 DeepSeek Harness 插件，提供完整的启动动画、登录认证与主界面美化，让每次启动都如同接入罗德岛终端。
+PRTS-themed boot sequence, identity gate and interface skin for DeepSeek Harness.
 
-English dsh-prts-boot is an Arknights PRTS-themed plugin for DeepSeek Harness, delivering a complete boot sequence, login gate and main-UI theming — every launch feels like connecting to the Rhodes Island terminal.
+The plugin adds a PRTS (Primitive Rhodes Island Terminal Service, from Arknights)
+opening ceremony to the app: a boot animation, an operator identity gate with
+selection / passcode entry, and an interface skin that follows the chosen
+variant. All voices are synthesized or extracted in PRTS style (robotic female
+voice, English lines, Chinese UI), and the main-UI theming is registered as two
+real DSH themes so the whole surface — background, sidebar, chat, panels, brand
+mark — re-skins consistently.
 
-✨ Features / 特性
+## Features
 
-🚀 PRTS 开机动画与身份认证流程（档案选择 / 编号匹配 / 密钥验证）
-🎤 原生风格的 PRTS 系统语音（官方原声 + RVC 声线转换）
-🔒 隐藏彩蛋账号「普瑞赛斯」，含干扰影像动效
-🎨 双主题皮肤（白·档案 / 黑·核心），覆盖背景、聊天框、侧边栏等全局界面
-⚙️ 丰富的可自定义设置，即存即用
+- **Boot sequence** — PRTS boot animation with the two variants:
+  - `A` 白 · 档案 (paper / archive, light)
+  - `B` 黑 · 核心 (black / core, dark)
+- **Identity gate** — user selection (Doctor B101 / Amiya R001 / Kal'tsit
+  B003, serial auto-match; unknown IDs are rejected), custom profiles created
+  in settings (编号 / 中文名 / English / password), per-account custom
+  passwords, remember-login, re-lock.
+- **Hidden record** — a concealed Priestess (普瑞赛斯) account: click the
+  plate watermark `◇` five times (or type `PRTS` in the archive list) to wake
+  it. Its flow removes the passcode field and overlays interference effects
+  (three intensity levels in settings).
+- **PRTS voice set** — boot / identify / auth / granted / denied / welcome /
+  locked, plus hidden-record lines; separate `sfx` toggle for UI sounds
+  (hover / tick / pick).
+- **Main-UI theming** — registered as the DSH themes `prts-paper` (light) and
+  `prts-core` (dark), driven by the chosen variant. Background paper tone with
+  coordinate grid, PRTS watermark and the composite geometry animation behind
+  the app; frameless hairline chat / panels; frosted sidebar and right panel;
+  optional floating action bar.
+- **Settings page** — every option documented, saved immediately, with master /
+  sub switches for the main-UI skin.
 
-🚀 PRTS boot animation and identity gate (profile picker / serial match / passcode)
-🎤 Authentic PRTS-style voice set (official clips + RVC voice conversion)
-🔒 Hidden "Priestess" easter-egg account with glitch effects
-🎨 Two theme skins (White · Archive / Black · Core) covering the whole app surface
-⚙️ Rich settings, saved instantly
+## Installation
 
-📦 Install / 安装
+The package is a standard DSH bundle plugin.
 
-标准 DSH 插件包。将本仓库目录添加至 profile 的 dependencies（link:）与 dsh.profile.bundles，或直接 npm pack 后安装 tgz，重启应用即可。
+### Install into a profile (local directory)
 
-English A standard DSH bundle plugin. Add the repo directory to your profile's dependencies (link:) and dsh.profile.bundles, or npm pack and install the tarball, then restart the app.
+1. Build nothing — the package ships plain JS (`lib/index.js` + `lib/client.js`).
+2. Add it to the profile like any local bundle:
 
-⚠️ Disclaimer / 声明
+   ```jsonc
+   // <DSH_HOME>/profiles/<profile>/package.json
+   {
+     "dependencies": {
+       "dsh-prts-boot": "link:./path/to/dsh-prts-boot"
+     },
+     "dsh": {
+       "profile": {
+         "bundles": ["dsh-prts-boot"]
+       }
+     }
+   }
+   ```
 
-同人粉丝作品，仅供个人使用；《明日方舟》相关素材版权归鹰角网络所有。
+3. Restart the app (or use the dsh-super-injector's `dev_install_package` /
+   `dev_inject_plugin` flow to load it without a restart).
 
-English A fan-made, non-commercial project. All Arknights-related assets belong to Hypergryph.
+The loader reads `dsh.bundle.patch` (`cordis.patch.yml`) and materializes
+`lib/index.js` on the host; the browser loads `lib/client.js` automatically
+(`dsh.client.platform: web`, `immediately: true`).
 
+### From a tarball
+
+`npm pack` respects the `files` field (lib, assets, cordis.patch.yml,
+README.md, LICENSE); install the tarball like any dependency.
+
+## Runtime state
+
+- Settings: `$DSH_HOME/dsh-prts-boot/config.json`
+- Session memory: browser `sessionStorage` / `localStorage`
+  (`dsh-prts-boot:session`, `dsh-prts-boot:float`)
+
+## Endpoints
+
+- `GET /dsh-prts-boot/api/state` — effective settings
+- `POST /dsh-prts-boot/api/state` — patch settings
+- `GET /dsh-prts-boot/voice/<id>.mp3` — voice clips (Range-capable)
+- `GET /dsh-prts-boot/asset/<name>` — whitelisted images
+- `GET/POST /dsh-prts-boot/api/beacon` — client heartbeat diagnostics
+
+## Asset provenance
+
+- 4 game-voice clips (boot / identify / auth / granted-doctor) extracted from
+  the official PRTS boot animation (bilibili BV1FJ396JEqw, fair use for
+  personal theming).
+- 7 lines converted through an RVC model trained on those clips
+  (en-US-AriaNeural base + PRTS timbre).
+- Wallpapers derived from the PRTS parallax wallpapers the user provided
+  (mpkg assets).
+- Arknights and its characters belong to Hypergryph. This is a personal
+  fan-skin plugin; do not redistribute commercially.
+
+## License
+
+MIT.

@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PRTS UI · Lines mock</title>
+<style>
+  :root {
+    --paper: #f4f3ef;
+    --ink: #1b1c1f;
+    --ink-2: #585b61;
+    --ink-3: #8b8e94;
+    --line: rgba(27, 28, 31, .14);
+    --line-soft: rgba(27, 28, 31, .08);
+    --acc: #2a6b64;
+    --acc-soft: rgba(42, 107, 100, .12);
+    --mono: "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+    --sans: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  }
+  html[data-skin="B"] {
+    --paper: #0f1013;
+    --ink: #f2f3f1;
+    --ink-2: #a7a9ae;
+    --ink-3: #66686e;
+    --line: rgba(242, 243, 241, .16);
+    --line-soft: rgba(242, 243, 241, .09);
+    --acc: #e0a94f;
+    --acc-soft: rgba(224, 169, 79, .14);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1688px; height: 833px; overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    transition: background .4s ease, color .4s ease;
+  }
+  .wall {
+    position: fixed; right: 0; top: 0; height: 100%; width: 62%;
+    pointer-events: none; opacity: .5;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 10%, #000 42%, #000 100%);
+    mask-image: linear-gradient(to right, transparent 0%, transparent 10%, #000 42%, #000 100%);
+  }
+  html[data-skin="B"] .wall { opacity: .42; }
+  .wall img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .grid-bg {
+    position: fixed; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 44px 44px;
+    opacity: .5;
+  }
+  .app {
+    position: relative; z-index: 1;
+    display: flex; height: 100vh;
+  }
+
+  /* ---------- sidebar : frameless, line accents, translate+extend ---------- */
+  .sidebar {
+    width: 288px; flex: 0 0 288px;
+    padding: 22px 16px 18px 20px;
+    border-right: 1px solid var(--line-soft);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 13px; letter-spacing: .22em;
+    color: var(--ink); padding: 4px 8px; margin-bottom: 18px;
+    user-select: none;
+  }
+  .brand .diamond {
+    width: 15px; height: 15px; flex: 0 0 15px;
+    border: 1.5px solid var(--ink);
+    transform: rotate(45deg);
+    position: relative;
+    transition: transform .5s cubic-bezier(.2,.7,.2,1), border-color .3s;
+  }
+  .brand .diamond::after {
+    content: ""; position: absolute; inset: 26%;
+    background: var(--acc); transition: background .3s;
+  }
+  .brand:hover .diamond { transform: rotate(225deg); }
+  .sess-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .28em;
+    color: var(--ink-3); padding: 0 8px 8px; text-transform: uppercase;
+  }
+  .sess {
+    position: relative;
+    padding: 9px 10px 9px 8px;
+    font-size: 13.5px; color: var(--ink-2);
+    cursor: pointer; white-space: nowrap; overflow: hidden;
+    transition: color .22s ease, transform .22s cubic-bezier(.2,.7,.2,1);
+  }
+  /* expanding hairline underline (延展) */
+  .sess::after {
+    content: ""; position: absolute; left: 8px; right: 10px; bottom: 3px; height: 1px;
+    background: var(--acc);
+    transform: scaleX(0); transform-origin: left center;
+    transition: transform .3s cubic-bezier(.2,.7,.2,1);
+  }
+  .sess .meta {
+    position: absolute; right: 10px; top: 9px;
+    font-family: var(--mono); font-size: 10px; color: var(--ink-3);
+    transition: transform .22s ease, color .22s;
+  }
+  .sess.hovered, .sess:hover {
+    color: var(--ink);
+    transform: translateX(5px);
+  }
+  .sess.hovered::after, .sess:hover::after { transform: scaleX(1); }
+  .sess.hovered .meta, .sess:hover .meta { color: var(--acc); transform: translateX(-2px); }
+  .sess.active { color: var(--ink); }
+  .sess.active::before {
+    content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 2px;
+    background: var(--acc);
+    transition: height .3s;
+  }
+  .sess.active.hovered::before { height: 40%; top: auto; }
+  .foot {
+    margin-top: auto;
+    padding: 10px 8px 0;
+    border-top: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
+    color: var(--ink-3); cursor: pointer;
+    transition: color .22s, letter-spacing .3s ease, transform .22s ease;
+  }
+  .foot.hovered, .foot:hover { color: var(--acc); transform: translateX(5px); letter-spacing: .26em; }
+
+  /* ---------- content ---------- */
+  .content {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    padding: 0 34px;
+  }
+  .header {
+    display: flex; align-items: center; gap: 12px;
+    height: 56px; flex: 0 0 56px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 13px; color: var(--ink-2);
+  }
+  .header .crumb { color: var(--ink-3); }
+  .header .model-pill {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 11px; color: var(--ink-2);
+    padding: 3px 0;
+    border-bottom: 1px solid var(--line);
+    transition: color .22s, border-color .22s;
+  }
+  .header .model-pill:hover { color: var(--acc); border-color: var(--acc); }
+  .hero { padding: 52px 6px 26px; }
+  .hero .mark {
+    width: 34px; height: 34px; margin-bottom: 18px;
+    border: 1.5px solid var(--acc); transform: rotate(45deg);
+    position: relative;
+  }
+  .hero .mark::after { content: ""; position: absolute; inset: 30%; background: var(--acc); opacity: .8; }
+  .hero h1 { font-size: 24px; font-weight: 600; letter-spacing: .04em; }
+  .hero p { margin-top: 8px; font-family: var(--mono); font-size: 12px; letter-spacing: .22em; color: var(--ink-3); }
+
+  .conv { flex: 1; overflow: hidden; padding: 8px 6px; }
+  .step { margin-bottom: 22px; max-width: 720px; }
+  .step-meta {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .18em;
+    color: var(--ink-3); margin-bottom: 7px;
+  }
+  .step-text { font-size: 14px; line-height: 1.65; color: var(--ink); }
+  .step.assistant .step-text::before {
+    content: "◇ "; color: var(--acc); font-family: var(--mono);
+  }
+  .tool {
+    margin-top: 10px;
+    border-left: 1px solid var(--acc);
+    padding-left: 12px;
+    font-size: 12.5px;
+    transition: border-color .3s;
+  }
+  .tool-head {
+    display: flex; gap: 10px; align-items: center;
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-2);
+    cursor: pointer;
+  }
+  .tool-state { color: var(--ink-3); font-size: 10px; letter-spacing: .14em; }
+  .tool.open .tool-state { color: var(--acc); }
+  .tool-body {
+    max-height: 0; overflow: hidden;
+    font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+    transition: max-height .45s cubic-bezier(.2,.7,.2,1), padding .3s ease;
+  }
+  .tool.open .tool-body { max-height: 90px; padding-top: 7px; }
+  .tool-body .ln { white-space: nowrap; overflow: hidden; }
+
+  /* ---------- composer : no frame, hairline + focus extend ---------- */
+  .composer {
+    flex: 0 0 auto;
+    padding: 16px 6px 22px;
+    border-top: 1px solid var(--line-soft);
+    transition: border-color .3s;
+  }
+  .composer.focus { border-top-color: var(--acc); }
+  .composer .hint {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .2em;
+    color: var(--ink-3);
+    transition: color .25s, transform .25s cubic-bezier(.2,.7,.2,1);
+  }
+  .composer.focus .hint { color: var(--acc); transform: translateX(6px); }
+  .composer input {
+    width: 100%; border: 0; outline: 0; background: transparent;
+    font-family: var(--sans); font-size: 15px; color: var(--ink);
+    padding: 10px 0 12px;
+  }
+  .composer input::placeholder { color: var(--ink-3); }
+  .composer-actions { display: flex; gap: 22px; align-items: center; }
+  .composer-actions .act {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .14em;
+    color: var(--ink-2); cursor: pointer; position: relative;
+    transition: color .22s, transform .22s ease;
+  }
+  .composer-actions .act::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 1px;
+    background: var(--acc); transform: scaleX(0); transform-origin: left center;
+    transition: transform .28s cubic-bezier(.2,.7,.2,1);
+  }
+  .composer-actions .act:hover { color: var(--acc); transform: translateY(-1px); }
+  .composer-actions .act:hover::after { transform: scaleX(1); }
+  .composer-actions .send { margin-left: auto; color: var(--acc); }
+
+  /* ---------- rightbar : slides in (平移) ---------- */
+  .rightbar {
+    position: fixed; right: 0; top: 0; bottom: 0; width: 264px; z-index: 2;
+    background: var(--paper);
+    border-left: 1px solid var(--line);
+    padding: 22px 18px;
+    transform: translateX(100%);
+    transition: transform .4s cubic-bezier(.2,.7,.2,1);
+    box-shadow: -18px 0 40px -30px rgba(0,0,0,.25);
+  }
+  .rightbar.open { transform: translateX(0); }
+  .rb-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .24em;
+    color: var(--ink-2); margin-bottom: 16px;
+  }
+  .rb-close { cursor: pointer; color: var(--ink-3); transition: color .2s, transform .2s; }
+  .rb-close:hover { color: var(--acc); transform: rotate(90deg); }
+  .rb-item {
+    position: relative;
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-2);
+    padding: 9px 2px; border-bottom: 1px solid var(--line-soft);
+    white-space: nowrap; overflow: hidden; cursor: pointer;
+    transition: color .22s, transform .22s cubic-bezier(.2,.7,.2,1);
+  }
+  .rb-item:hover { color: var(--acc); transform: translateX(5px); }
+
+  .caption {
+    position: fixed; left: 320px; top: 18px; z-index: 3;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .3em;
+    color: var(--ink-3); pointer-events: none;
+  }
+</style>
+</head>
+<body data-skin="A">
+  <div class="grid-bg"></div>
+  <div class="wall"><img id="wallimg" alt="" /></div>
+  <div class="app">
+    <span data-shell-overlay></span>
+    <div class="sidebar">
+      <div class="brand"><span class="diamond"></span><span>PRTS</span></div>
+      <div class="sess-label">Sessions · 工作区</div>
+      <div class="sess">PRTS 启动插件迭代<span class="meta">刚刚</span></div>
+      <div class="sess active">主界面美化方案<span class="meta">2 分钟</span></div>
+      <div class="sess">语音包验收<span class="meta">昨天</span></div>
+      <div class="sess">设置迁移<span class="meta">周一</span></div>
+      <div class="foot">+ 新建会话</div>
+    </div>
+    <div class="content">
+      <div class="header">
+        <span class="crumb">默认工作区 /</span><span>主界面美化方案</span>
+        <span class="model-pill">DeepSeek-V4</span>
+      </div>
+      <div class="hero">
+        <div class="mark"></div>
+        <h1>欢迎回来，博士</h1>
+        <p>PRTS · ONLINE — 等待指令</p>
+      </div>
+      <div class="conv">
+        <div class="step">
+          <div class="step-meta">DOCTOR · 11:24</div>
+          <div class="step-text">请给出 ui 美化的效果图</div>
+        </div>
+        <div class="step assistant">
+          <div class="step-meta">PRTS · THINKING</div>
+          <div class="step-text">好的，博士。正在整理「无框 · 线条 · 平移延展」设计方案。</div>
+          <div class="tool" id="tool1">
+            <div class="tool-head">◇ ui-tokens <span class="tool-state">RUNNING</span></div>
+            <div class="tool-body">
+              <div class="ln">&gt; collect design tokens … ok</div>
+              <div class="ln">&gt; frameless = no card borders, hairline only</div>
+              <div class="ln">&gt; motion = translate + extend (240ms)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="composer" id="composer">
+        <div class="hint">◇ 发消息或创建任务</div>
+        <input id="cin" placeholder="输入内容，@ 引用文件或对话" />
+        <div class="composer-actions">
+          <span class="act">文件</span><span class="act">命令</span><span class="act">模型 ▾</span>
+          <span class="act send">发送 →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="rightbar" id="rightbar">
+    <div class="rb-head"><span>FILES · 文件</span><span class="rb-close" id="rbclose">✕</span></div>
+    <div class="rb-item">assets/prts-wall-light.jpg</div>
+    <div class="rb-item">lib/client.js</div>
+    <div class="rb-item">lib/index.js</div>
+    <div class="rb-item">preview/prts_ui_lines.html</div>
+  </div>
+  <div class="caption" id="caption">VAR A · 无框线条 · PAPER</div>
+<script>
+  (function () {
+    var params = new URLSearchParams(location.search)
+    var skin = params.get('skin') === 'B' ? 'B' : 'A'
+    var t = parseFloat(params.get('t') || '0')
+    var freeze = params.get('freeze') === '1'
+    document.documentElement.setAttribute('data-skin', skin)
+    var img = document.getElementById('wallimg')
+    img.src = skin === 'A' ? '/assets/prts-wall-light.jpg' : '/assets/prts-wall-dark.jpg'
+    var cap = document.getElementById('caption')
+    cap.textContent = (skin === 'A' ? 'VAR A · 无框线条 · PAPER' : 'VAR B · 无框线条 · CORE')
+
+    var sesses = document.querySelectorAll('.sess')
+    var foot = document.querySelector('.foot')
+    var tool = document.getElementById('tool1')
+    var composer = document.getElementById('composer')
+    var rightbar = document.getElementById('rightbar')
+    var input = document.getElementById('cin')
+
+    // Demo driver: scripted hover/expand/slide sequence, loops every 8s.
+    // t param (seconds) seeks into the loop; freeze pauses the loop with the
+    // current state held.
+    var LOOP = 8
+    var phase = 0
+    var lastEl = null
+    function applyState(p) {
+      if (p >= 0 && p < 1.6) { phase = 0 }
+      else if (p < 2.8) { phase = 1 }
+      else if (p < 4.0) { phase = 2 }
+      else if (p < 5.6) { phase = 3 }
+      else { phase = 4 }
+      var i, els = document.querySelectorAll('.sess')
+      for (i = 0; i < els.length; i++) els[i].classList.remove('hovered')
+      foot.classList.remove('hovered')
+      tool.classList.remove('open')
+      composer.classList.remove('focus')
+      rightbar.classList.remove('open')
+      input.blur()
+      if (phase === 1) { els[0].classList.add('hovered') }
+      if (phase === 2) { els[1].classList.add('hovered'); tool.classList.add('open') }
+      if (phase === 3) { composer.classList.add('focus'); input.focus() }
+      if (phase === 4) { rightbar.classList.add('open') }
+    }
+    if (freeze) {
+      applyState(((t % LOOP) + LOOP) % LOOP)
+    } else {
+      var start = performance.now() - t * 1000
+      function tick(now) {
+        applyState(((now - start) / 1000 % LOOP + LOOP) % LOOP)
+        requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
+    }
+    document.getElementById('rbclose').addEventListener('click', function () {
+      rightbar.classList.remove('open')
+    })
+  })()
+</script>
+</body>
+</html>

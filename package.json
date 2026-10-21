@@ -1,0 +1,39 @@
+{
+  "name": "dsh-prts-boot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PRTS boot sequence, identity gate and interface skin for DeepSeek Harness",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "prts",
+    "arknights",
+    "login"
+  ],
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  }
+}

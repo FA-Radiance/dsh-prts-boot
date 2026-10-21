@@ -1,0 +1,4 @@
+# dsh-prts-boot — inserted by the bundle's own patch
+- insert:
+    - id: dsh-prts-boot
+      name: dsh-prts-boot

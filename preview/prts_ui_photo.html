@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>PRTS UI mock — v17 photo</title>
+  <style>
+    :root {
+      --dsw-alias-bg-base: #f2f1ee;
+      --dsw-alias-label-primary: #12120f;
+      --dsw-alias-label-secondary: #4c4b45;
+      --dsw-alias-label-tertiary: #6f6d66;
+      --dsw-alias-border-l1: #e8e6df;
+      --dsw-alias-border-l2: #e3e1da;
+      --dsw-specific-sidebar-fill: #f7f5f0;
+      --dsw-specific-bubble: #faf8f3;
+      --dsw-specific-input-major: #fffefb;
+      --dsw-alias-brand-primary: #3f45c9;
+      --dsw-alias-interactive-bg-active: rgba(17, 17, 16, 0.09);
+      --wall-hue: 0deg;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      background: var(--dsw-alias-bg-base);
+      overflow: hidden;
+    }
+    .app {
+      display: flex;
+      height: 100%;
+      position: relative;
+      z-index: 1;
+    }
+    .sidebar {
+      width: 232px;
+      flex: 0 0 232px;
+      background: var(--dsw-specific-sidebar-fill);
+      border-right: 1px solid var(--dsw-alias-border-l1);
+      padding: 18px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 2px 6px 14px; }
+    .brand .mark {
+      width: 26px; height: 26px;
+      background: var(--dsw-alias-brand-primary);
+      border-radius: 7px;
+    }
+    .brand .name { font-weight: 700; font-size: 14px; }
+    .treeitem {
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--dsw-alias-label-secondary);
+    }
+    .treeitem[aria-selected='true'] {
+      background: var(--dsw-alias-interactive-bg-active);
+      color: var(--dsw-alias-label-primary);
+    }
+    .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .phasebar {
+      padding: 16px 24px 8px;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      color: var(--dsw-alias-label-tertiary);
+    }
+    .scroll {
+      flex: 1; overflow: auto;
+      padding: 8px 24px 18px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .msg { max-width: 780px; }
+    .assistant { display: flex; gap: 12px; }
+    .bubble {
+      background: var(--dsw-specific-bubble);
+      border-radius: 4px 14px 14px 14px;
+      padding: 14px 18px;
+      font-size: 14px; line-height: 1.7;
+      color: var(--dsw-alias-label-primary);
+    }
+    .tool {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border: 1px solid var(--dsw-alias-border-l2);
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--dsw-alias-label-secondary);
+      display: inline-block;
+    }
+    .composer { padding: 10px 24px 22px; }
+    .composer .composer-card[data-composer-card] {
+      border: none;
+      background: transparent;
+      border-bottom: 1px solid rgba(17, 17, 16, 0.16);
+      border-radius: 0;
+      padding: 12px 2px;
+      font-size: 13px;
+      color: var(--dsw-alias-label-tertiary);
+      transition: border-color 0.18s ease;
+    }
+    .composer .composer-card[data-composer-card]::before {
+      content: '◇';
+      margin-right: 9px;
+      font-size: 11px;
+      color: var(--dsw-alias-brand-primary);
+    }
+    .composer .composer-card[data-composer-card]:focus-within {
+      border-bottom-color: var(--dsw-alias-brand-primary);
+    }
+    .composer-card .kbd {
+      border: 1px solid var(--dsw-alias-border-l2);
+      border-radius: 5px;
+      padding: 1px 6px;
+      margin-left: 8px;
+      font-size: 11px;
+    }
+
+    /* ---- dark-mode mock theming for skin B ---- */
+    html[data-prts-skin='B'] {
+      --dsw-alias-bg-base: #0a0a0b;
+      --dsw-alias-label-primary: #e8e8e4;
+      --dsw-alias-label-secondary: #9c9c96;
+      --dsw-alias-label-tertiary: #6e6e6a;
+      --dsw-alias-border-l1: #1f1f25;
+      --dsw-alias-border-l2: #26262c;
+      --dsw-specific-sidebar-fill: rgba(14, 16, 21, 0.66);
+      --dsw-specific-bubble: #14161a;
+      --dsw-specific-input-major: #121418;
+      --dsw-alias-brand-primary: #41d6d6;
+      --dsw-alias-interactive-bg-active: rgba(255, 255, 255, 0.08);
+    }
+    html[data-prts-skin='B'] .composer .composer-card[data-composer-card] {
+      border-bottom-color: rgba(244, 242, 236, 0.2);
+    }
+    html[data-prts-skin='B'] .composer .composer-card[data-composer-card]::before {
+      color: #41d6d6;
+    }
+
+    /* ---- wallpaper background layer (z 0) ---- */
+    .prts-ui-bg {
+      position: fixed; inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: var(--wall-op, 1);
+    }
+    .prts-ui-wall {
+      position: absolute;
+      top: var(--wall-top, 0%);
+      left: var(--wall-left, 0%);
+      width: var(--wall-w, 140%);
+      /* cut off the lower part: fade everything below 51% of video height */
+      -webkit-mask-image: linear-gradient(to bottom, rgb(0, 0, 0) 0%, rgb(0, 0, 0) 51%, transparent 58%, transparent 100%);
+      mask-image: linear-gradient(to bottom, rgb(0, 0, 0) 0%, rgb(0, 0, 0) 51%, transparent 58%, transparent 100%);
+    }
+    .prts-ui-wall video {
+      display: block;
+      width: 100%;
+      height: auto;
+      -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0.55) 42%, rgb(0, 0, 0) 62%);
+      mask-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0.55) 42%, rgb(0, 0, 0) 62%);
+    }
+    /* L2: red rhombus ring, cut from the wallpaper itself */
+    .prts-ui-rhombus {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 22%;
+      transform: translate(-50%, -50%) translate3d(calc(var(--wx, 0) * var(--wall-par, 1) * 12px), calc(var(--wy, 0) * var(--wall-par, 1) * 9px), 0);
+      transition: transform 0.22s ease-out;
+      will-change: transform;
+    }
+    .prts-ui-rhombus img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* ---- bottom-left PRTS logo (clickable → PRTS settings) ---- */
+    .prts-ui-logo {
+      position: fixed;
+      left: 20px;
+      bottom: 16px;
+      z-index: 2147482000;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 12px 6px 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: 'Courier New', monospace;
+    }
+    .prts-ui-logo img {
+      height: 42px;
+      width: auto;
+      filter: invert(0.88);
+      transition: filter 0.18s ease;
+    }
+    .prts-ui-logo .prts-ui-logo-word {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      color: var(--dsw-alias-label-primary);
+    }
+    .prts-ui-logo .prts-ui-logo-sub {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      opacity: 0.55;
+      color: var(--dsw-alias-label-secondary);
+    }
+    .prts-ui-logo:hover img { filter: invert(0.6) sepia(1) saturate(3) hue-rotate(-30deg); }
+    .prts-ui-logo:active { transform: translateY(1px); }
+    html[data-prts-skin='B'] .prts-ui-logo img { filter: none; }
+    html[data-prts-skin='B'] .prts-ui-logo:hover img { filter: brightness(1.4); }
+    html[data-prts-skin='B'] .prts-ui-logo .prts-ui-logo-word { color: #e8e8e4; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .prts-ui-wall, .prts-ui-rhombus { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <span data-shell-overlay></span>
+    <div class="sidebar">
+      <div class="brand">
+        <div class="mark" data-slot="sidebar.brand.mark"></div>
+        <div class="name" data-slot="sidebar.brand.name">PRTS Agent</div>
+      </div>
+      <div class="treeitem">◇ 新会话</div>
+      <div class="treeitem" aria-selected="true">设计 PRTS 启动插件</div>
+      <div class="treeitem">主界面美化讨论</div>
+      <div class="treeitem">语音与音效</div>
+    </div>
+    <div class="content">
+      <div class="phasebar" data-phase="active">ACTIVE SESSION — 设计 PRTS 启动插件</div>
+      <div class="scroll" data-conversation-scroll>
+        <div class="msg" data-chat-flow-kind="assistant-step">
+          <div class="assistant">
+            <div class="bubble">已收到。启动门、登录门与语音链路均已实装。现在可以为 DSH 主界面套用 PRTS 主题：以您提供的两张离解复合壁纸为背景，红色菱形独立成第二视差图层，聊天框采用无框设计——全部为可读性优先的装饰层。</div>
+          </div>
+          <div class="tool" data-tool data-state="running"><span class="state">● 执行中</span> — 正在加载会话上下文…</div>
+        </div>
+      </div>
+      <div class="composer" data-composer-seat>
+        <div class="composer-card" data-composer-card>发消息或创建任务 · 调用命令，@ 文件或对话 <span class="kbd">Enter</span> 发送</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./vendor/react.production.min.js"></script>
+  <script src="./vendor/react-dom.production.min.js"></script>
+  <script>
+    window.__ModuleLoader__ = {
+      load: function (spec) {
+        var localRequire = function (name) {
+          if (name === 'react') return window.React
+          if (name === 'react-dom') return window.ReactDOM
+          throw new Error('unexpected require: ' + name)
+        }
+        window.__PRTS_MODULE__ = spec.factory(localRequire)
+      },
+    }
+  </script>
+  <script src="../lib/client.js"></script>
+  <script>
+    var params = new URLSearchParams(location.search)
+    var skin = params.get('skin') === 'B' ? 'B' : 'A'
+    var pkg = params.get('pkg') === '1' ? 1 : 2
+    var op = params.get('op') !== null ? Number(params.get('op')) / 100 : 1
+    var par = params.get('par') !== null ? Number(params.get('par')) : 2
+    var animate = params.get('animate') === '1'
+    var mx = params.get('mx') !== null ? Number(params.get('mx')) : 0
+    var my = params.get('my') !== null ? Number(params.get('my')) : 0
+
+    document.documentElement.dataset.prtsSkin = skin
+    document.documentElement.dataset.prtsUi = skin
+    document.documentElement.dataset.prtsUiBg = '1'
+    document.documentElement.dataset.prtsUiChat = '1'
+
+    /* client module apply with a noop ctx (we only need its <style> injection) */
+    window.__PRTS_MODULE__.apply({
+      slots: {
+        inject: function () {},
+        register: function () {},
+      },
+      effect: function () {},
+      on: function () {},
+      root: null,
+    })
+
+    var P = skin === 'B'
+      ? { pkg: 'pkg1', rhombus: '../.work/v17/dark_fill.png', logo: '../.work/v17/dark_logo.png' }
+      : { pkg: 'pkg2', rhombus: '../.work/v17/light_fill.png', logo: '../.work/v17/dark_logo.png' }
+
+    var bg = document.createElement('div')
+    bg.className = 'prts-ui-bg'
+    bg.setAttribute('aria-hidden', 'true')
+    bg.innerHTML =
+      '<div class="prts-ui-wall">' +
+      '  <video muted autoplay loop playsinline preload="auto" src="../.work/mpkg/' + P.pkg + '/wallpaper.mp4"></video>' +
+      '  <div class="prts-ui-rhombus"><img alt="" src="' + P.rhombus + '"></div>' +
+      '</div>'
+    bg.style.setProperty('--wall-op', op)
+    bg.style.setProperty('--wall-par', par)
+    document.body.appendChild(bg)
+
+    /* bottom-left clickable PRTS logo → PRTS settings */
+    var logo = document.createElement('a')
+    logo.className = 'prts-ui-logo'
+    logo.href = '#'
+    logo.setAttribute('title', '直达 PRTS 设置')
+    logo.innerHTML =
+      '<img alt="PRTS" src="' + P.logo + '">' +
+      '<span class="prts-ui-logo-word">PRTS</span>' +
+      '<span class="prts-ui-logo-sub">SETTINGS</span>'
+    logo.addEventListener('click', function (e) {
+      e.preventDefault()
+      console.log('[prts] logo clicked → open PRTS settings (settings.plugins.tab)')
+    })
+    document.body.appendChild(logo)
+
+    /* ---- parallax ----
+       wx/wy: -1..1 mouse space; animate mode drives a sine demo */
+    var wall = bg.querySelector('.prts-ui-wall')
+    var mxNow = mx
+    var myNow = my
+    var tSeed = params.get('t') !== null ? Number(params.get('t')) : 0
+    var m0 = Date.now() - tSeed * 1000
+    var applyMotion = function (t) {
+      bg.style.setProperty('--wx', mxNow)
+      bg.style.setProperty('--wy', myNow)
+    }
+    applyMotion(0)
+    if (animate) {
+      var tick = function () {
+        var t = (Date.now() - m0) / 1000
+        mxNow = Math.sin(t * 0.9) * 0.85
+        myNow = Math.sin(t * 1.35 + 1.2) * 0.6
+        applyMotion(t)
+        requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
+    } else {
+      document.addEventListener('pointermove', function (e) {
+        mxNow = (e.clientX / window.innerWidth) * 2 - 1
+        myNow = (e.clientY / window.innerHeight) * 2 - 1
+      })
+    }
+  </script>
+</body>
+</html>

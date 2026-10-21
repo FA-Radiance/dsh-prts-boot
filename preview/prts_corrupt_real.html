@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PRTS boot — corruption overlay on real identify scene</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #2a2a2a;
+      }
+      #host {
+        height: 100%;
+      }
+      /* ---------- corruption overlay (above the real gate) ---------- */
+      #prts-fx {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483101;
+        pointer-events: none;
+      }
+      @keyframes burstFlash {
+        0%, 100% { opacity: 0; }
+        1.5%, 4.5% { opacity: 1; }
+        36%, 39% { opacity: 1; }
+        70%, 73% { opacity: 1; }
+      }
+      @keyframes silhouetteStrobe {
+        0%, 1.4%, 6.6%, 35.9%, 41.1%, 69.9%, 75.1%, 100% { opacity: 0; }
+        1.5%, 6.5% { opacity: .72; }
+        36%, 41% { opacity: .72; }
+        70%, 75% { opacity: .72; }
+      }
+      @keyframes silhouetteGlitch {
+        0%, 1.4%, 6.6%, 35.9%, 41.1%, 69.9%, 75.1%, 100% { transform: translateX(0); }
+        2%, 5% { transform: translateX(5px); }
+        36.5%, 40% { transform: translateX(-5px); }
+        70.5%, 74% { transform: translateX(3px); }
+      }
+      @keyframes avatarCorrupt {
+        0%, 100% { opacity: 0; }
+        36.5%, 40% { opacity: 1; }
+        71%, 74% { opacity: 1; }
+      }
+      @keyframes haloPulse {
+        0%, 100% { opacity: .5; transform: scale(1); }
+        50% { opacity: .9; transform: scale(1.04); }
+      }
+      @keyframes sliceShiftA {
+        0%, 100% { transform: translateX(0); }
+        1.5%, 4.5% { transform: translateX(-9px); }
+        36%, 39% { transform: translateX(-13px); }
+        70%, 73% { transform: translateX(-7px); }
+      }
+      @keyframes sliceShiftB {
+        0%, 100% { transform: translateX(0); }
+        1.5%, 4.5% { transform: translateX(10px); }
+        36%, 39% { transform: translateX(14px); }
+        70%, 73% { transform: translateX(8px); }
+      }
+      @keyframes stampBlink {
+        0%, 8% { opacity: 0; transform: rotate(-4deg) scale(.9); }
+        9%, 14% { opacity: .95; transform: rotate(-4deg) scale(1); }
+        15%, 44% { opacity: 0; transform: rotate(-4deg) scale(.9); }
+        45%, 50% { opacity: .95; transform: rotate(-4deg) scale(1); }
+        51%, 100% { opacity: 0; transform: rotate(-4deg) scale(.9); }
+      }
+      @keyframes errInOut {
+        0%, 5% { opacity: 0; transform: translateY(6px); }
+        8%, 20% { opacity: .95; transform: translateY(0); }
+        24%, 30% { opacity: 0; transform: translateY(-4px); }
+        100% { opacity: 0; }
+      }
+      @keyframes errInOut2 {
+        0%, 48% { opacity: 0; transform: translateY(6px); }
+        52%, 64% { opacity: .95; transform: translateY(0); }
+        68%, 74% { opacity: 0; transform: translateY(-4px); }
+        100% { opacity: 0; }
+      }
+      /* silhouette apparition — left half, bottom aligned, 200px top gap */
+      #prts-fx .silhouette {
+        position: absolute; left: 0; top: 0;
+        width: 50%; height: 100%;
+        display: flex; align-items: flex-end; justify-content: center;
+      }
+      #prts-fx .portal {
+        position: absolute; left: 50%; top: 58%;
+        width: 560px; height: 560px; margin: -280px 0 0 -280px;
+        border-radius: 50%;
+        background: radial-gradient(circle,
+          rgba(17,17,16,.14) 0%,
+          rgba(53,162,160,.12) 34%,
+          rgba(53,162,160,.05) 55%,
+          rgba(53,162,160,0) 72%);
+      }
+      #prts-fx .halo {
+        position: absolute; left: 50%; top: 24%;
+        width: 300px; height: 300px; margin-left: -150px;
+        border-radius: 50%;
+        border: 2px solid rgba(53,162,160,.4);
+        box-shadow: 0 0 90px rgba(53,162,160,.28), inset 0 0 60px rgba(53,162,160,.14);
+        animation: haloPulse 4.2s ease-in-out infinite;
+      }
+      #prts-fx .fig-b {
+        position: relative;
+        height: calc(100% - 80px);
+        aspect-ratio: 412 / 394;
+        animation: silhouetteStrobe 7s linear infinite, silhouetteGlitch 7s linear infinite;
+        opacity: 0;
+      }
+      #prts-fx .fig-b .layer { position: absolute; inset: 0; }
+      #prts-fx .fig-b .layer img {
+        width: 100%; height: 100%; object-fit: contain;
+        filter: drop-shadow(0 0 44px rgba(53,162,160,.5));
+      }
+      #prts-fx .fig-b .layer.corrupted { animation: avatarCorrupt 7s linear infinite; }
+      #prts-fx .fig-b .layer.corrupted img {
+        filter: drop-shadow(2.5px 0 rgba(198,79,63,.6)) drop-shadow(-2.5px 0 rgba(53,162,160,.6))
+                drop-shadow(0 0 52px rgba(198,79,63,.45));
+      }
+      #prts-fx .slice {
+        position: absolute; left: 0; right: 0; height: 26px;
+        background:
+          linear-gradient(rgba(198,79,63,.20), rgba(198,79,63,.20)),
+          linear-gradient(rgba(53,162,160,.16), rgba(53,162,160,.16)),
+          linear-gradient(rgba(247,245,240,.9), rgba(247,245,240,.9));
+        background-size: 26px 100%, 26px 100%, 100% 100%;
+        background-position: -9px 0, 10px 0, 0 0;
+        background-repeat: no-repeat;
+        mix-blend-mode: multiply;
+        opacity: 0;
+      }
+      #prts-fx .slice.s1 { top: 18%; animation: burstFlash 7s linear infinite, sliceShiftA 7s linear infinite; }
+      #prts-fx .slice.s2 { top: 47%; height: 18px; animation: burstFlash 7s linear infinite, sliceShiftB 7s linear infinite; }
+      #prts-fx .slice.s3 { top: 71%; height: 30px; animation: burstFlash 7s linear infinite, sliceShiftA 7s linear infinite; }
+      #prts-fx .flicker {
+        position: absolute; inset: 0;
+        background: linear-gradient(rgba(255,255,255,.22), rgba(255,255,255,0) 30%, rgba(255,255,255,.14) 62%, rgba(255,255,255,0) 100%);
+        animation: burstFlash 7s linear infinite;
+      }
+      #prts-fx .errs { position: absolute; font-family: Consolas, "Courier New", monospace; font-size: 15px; letter-spacing: .5px; }
+      #prts-fx .err {
+        padding: 2px 8px; margin-bottom: 6px; width: max-content;
+        background: rgba(17,17,16,.88); color: #a9e3de;
+        border-left: 3px solid #c64f3f;
+        text-shadow: 0 0 6px rgba(53,162,160,.8);
+        opacity: 0;
+      }
+      #prts-fx .err.red { border-left-color: #35a2a0; color: #ffb3a8; text-shadow: 0 0 6px rgba(198,79,63,.8); }
+      #prts-fx .errs.tl { top: 64px; left: 64px; }
+      #prts-fx .errs.br { bottom: 64px; right: 64px; text-align: right; }
+      #prts-fx .errs.tl .err:nth-child(1) { animation: errInOut 7s linear infinite; }
+      #prts-fx .errs.tl .err:nth-child(2) { animation: errInOut 7s linear infinite .35s; }
+      #prts-fx .errs.tl .err:nth-child(3) { animation: errInOut2 7s linear infinite .2s; }
+      #prts-fx .errs.br .err:nth-child(1) { animation: errInOut2 7s linear infinite; }
+      #prts-fx .errs.br .err:nth-child(2) { animation: errInOut 7s linear infinite .5s; }
+      #prts-fx .gibberish { letter-spacing: 3px; color: rgba(17,17,16,.5); font-size: 17px; opacity: .8; }
+      #prts-fx .stampfx {
+        position: absolute; right: 6%; top: 38%;
+        font-family: Consolas, monospace; font-size: 15px; color: #c64f3f;
+        border: 1px solid #c64f3f; padding: 3px 10px; letter-spacing: .12em;
+        box-shadow: 0 0 18px rgba(198,79,63,.25);
+        opacity: 0;
+        animation: stampBlink 7s linear infinite;
+      }
+      /* chromatic jitter on the REAL ghost row at bursts */
+      @keyframes ghostRowJitter {
+        0%, 100% { transform: translateX(0); }
+        2%, 5% { transform: translateX(2px); filter: drop-shadow(1.6px 0 rgba(198,79,63,.55)) drop-shadow(-1.6px 0 rgba(53,162,160,.55)); }
+        36.5%, 39.5% { transform: translateX(-2px); filter: drop-shadow(-1.6px 0 rgba(198,79,63,.55)) drop-shadow(1.6px 0 rgba(53,162,160,.55)); }
+        70.5%, 73.5% { transform: translateX(1px); filter: drop-shadow(1.6px 0 rgba(198,79,63,.55)) drop-shadow(-1.6px 0 rgba(53,162,160,.55)); }
+      }
+      .prts-row.is-prts { animation: ghostRowJitter 7s linear infinite !important; }
+    </style>
+  </head>
+  <body>
+    <div id="host"></div>
+    <script src="./vendor/react.production.min.js"></script>
+    <script src="./vendor/react-dom.production.min.js"></script>
+    <script>
+      // Minimal stand-in for the DSH client module loader (same as index.html).
+      window.__ModuleLoader__ = {
+        load: function (spec) {
+          var localRequire = function (name) {
+            if (name === 'react') return window.React
+            if (name === 'react-dom') return window.ReactDOM
+            throw new Error('unexpected require: ' + name)
+          }
+          window.__PRTS_MODULE__ = spec.factory(localRequire)
+        },
+      }
+
+      var params = new URLSearchParams(location.search)
+      var variant = (params.get('variant') || 'A').toUpperCase()
+      window.__PRTS_BOOT_PREVIEW__ = {
+        phase: 'identify',
+        user: params.get('user') || 'doctor',
+        bootAt: undefined,
+        grantAt: undefined,
+        reveal: true,
+        settings: { variant: variant, voice: false, volume: 0 },
+      }
+    </script>
+    <script src="../lib/client.js"></script>
+    <script src="./main.js"></script>
+    <script>
+      // Append the corruption overlay once the real gate has rendered.
+      ;(function () {
+        function build() {
+          var fx = document.createElement('div')
+          fx.id = 'prts-fx'
+          fx.innerHTML =
+            '<div class="silhouette">' +
+            '<div class="portal"></div><div class="halo"></div>' +
+            '<div class="fig-b"><div class="layer"><img src="assets/prts_npc083_silhouette.png" alt=""></div>' +
+            '<div class="layer corrupted"><img src="assets/prts_npc083_silhouette.png" alt=""></div></div>' +
+            '</div>' +
+            '<div class="slice s1"></div><div class="slice s2"></div><div class="slice s3"></div>' +
+            '<div class="flicker"></div>' +
+            '<div class="errs tl">' +
+            '<div class="err">SIGFAULT 0x1F :: ACCESS OVERRIDE</div>' +
+            '<div class="err">prts.core: overwrite(9) → ROOT …</div>' +
+            '<div class="err red">0x7A [E] identity.db: record 083 … corrupt</div>' +
+            '<div class="gibberish">▓▒░ ███▒░░ ▓░▒▓</div>' +
+            '</div>' +
+            '<div class="errs br">' +
+            '<div class="err">kernel: EYESOFPRIESTESS …</div>' +
+            '<div class="err">watchdog: 167 tally / 3711 node</div>' +
+            '<div class="gibberish">░░▒▓█ ░▒▓ ██░▒</div>' +
+            '</div>' +
+            '<div class="stampfx">SYSTEM COMPROMISED</div>'
+          document.body.appendChild(fx)
+        }
+        // ?t=<seconds> seeks the fx animations; ?freeze=1 pauses them.
+        function seekFx() {
+          var t = parseFloat(params.get('t') || '')
+          var fx = document.getElementById('prts-fx')
+          if (!fx || !(t > 0)) return
+          fx.querySelectorAll('*').forEach(function (el) {
+            var st = getComputedStyle(el)
+            if (st.animationName && st.animationName !== 'none') {
+              el.style.animationDelay = '-' + t + 's'
+            }
+          })
+          if (params.get('freeze') === '1') {
+            fx.querySelectorAll('*').forEach(function (el) {
+              var st = getComputedStyle(el)
+              if (st.animationName && st.animationName !== 'none') {
+                el.style.animationPlayState = 'paused'
+              }
+            })
+          }
+        }
+        function tryBuild() {
+          if (document.querySelector('.prts-identify')) {
+            build()
+            seekFx()
+          } else {
+            setTimeout(tryBuild, 120)
+          }
+        }
+        tryBuild()
+      })()
+    </script>
+  </body>
+</html>

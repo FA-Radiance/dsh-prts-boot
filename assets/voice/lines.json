@@ -1,0 +1,90 @@
+{
+  "boot": {
+    "text": "Initializing, okay.",
+    "file": "boot.mp3",
+    "source": "game",
+    "bytes": 16057
+  },
+  "identify": {
+    "text": "Please log in, Administrator.",
+    "file": "identify.mp3",
+    "source": "game",
+    "bytes": 24521
+  },
+  "auth": {
+    "text": "Permission, level 8.",
+    "file": "auth.mp3",
+    "source": "game",
+    "bytes": 13706
+  },
+  "granted-doctor": {
+    "text": "Welcome back, Doctor.",
+    "file": "granted-doctor.mp3",
+    "source": "game",
+    "bytes": 15743
+  },
+  "granted-amiya": {
+    "src": "rvc",
+    "text": "Identity confirmed. Welcome back, Amiya."
+  },
+  "granted-kaltsit": {
+    "src": "rvc",
+    "text": "Identity confirmed. Welcome back, Doctor Kal'tsit."
+  },
+  "denied": {
+    "src": "rvc",
+    "text": "Access denied. Identity verification failed."
+  },
+  "welcome": {
+    "src": "rvc",
+    "text": "PRTS at your service."
+  },
+  "locked": {
+    "src": "rvc",
+    "text": "Access channel locked."
+  },
+  "prts-reveal": {
+    "src": "rvc",
+    "text": "Hidden archive detected. She is still watching."
+  },
+  "granted-prts": {
+    "src": "rvc",
+    "text": "I have not forgotten you. Welcome back, Doctor."
+  },
+  "hover": {
+    "text": "ui hover blip",
+    "file": "hover.mp3",
+    "source": "synth",
+    "bytes": 1506
+  },
+  "ambience": {
+    "text": "console hum loop",
+    "file": "ambience.mp3",
+    "source": "synth",
+    "bytes": 80501
+  },
+  "tick": {
+    "text": "typing key blip",
+    "file": "tick.mp3",
+    "source": "synth",
+    "bytes": 879
+  },
+  "pick": {
+    "text": "selection confirm chirp",
+    "file": "pick.mp3",
+    "source": "synth",
+    "bytes": 1297
+  },
+  "bgm": {
+    "text": "Rhodes Island splash score (one pass, seamless)",
+    "file": "bgm.mp3",
+    "source": "game",
+    "bytes": 65133
+  },
+  "bgm-ok": {
+    "text": "Login-success bed: speech-free ambience of the same score",
+    "file": "bgm-ok.mp3",
+    "source": "game+synth",
+    "bytes": 56493
+  }
+}
